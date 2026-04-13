@@ -396,8 +396,10 @@ MonoBehaviour:
   nameText: {fileID: 1629798305}
   dialogText: {fileID: 1868952295}
   dialogArrow: {fileID: 347936972}
+  dialogArrowAnimator: {fileID: 347936976}
+  myRoomAnimator: {fileID: 1335030264}
   typingSpeed: 0.05
-  arrowBlinkInterval: 0.4
+  jsonFileName: Dialog/scene1_dialog
 --- !u!1 &274232563
 GameObject:
   m_ObjectHideFlags: 0
@@ -515,6 +517,7 @@ GameObject:
   - component: {fileID: 347936973}
   - component: {fileID: 347936975}
   - component: {fileID: 347936974}
+  - component: {fileID: 347936976}
   m_Layer: 5
   m_Name: DialogArrow
   m_TagString: Untagged
@@ -579,6 +582,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 347936972}
   m_CullTransparentMesh: 1
+--- !u!95 &347936976
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347936972}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 174ae648010c78b4da8c8f22f89ce018, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &525696515
 GameObject:
   m_ObjectHideFlags: 0
@@ -885,6 +909,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1335030263}
   - component: {fileID: 1335030262}
+  - component: {fileID: 1335030264}
   m_Layer: 0
   m_Name: my room
   m_TagString: Untagged
@@ -959,6 +984,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &1335030264
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1335030261}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: c2219e5bf95fa3941bc21a4b0a54ecc8, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1629798303
 GameObject:
   m_ObjectHideFlags: 0
@@ -993,7 +1039,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -674, y: 96}
+  m_AnchoredPosition: {x: -673.99994, y: 96}
   m_SizeDelta: {x: -1627.53, y: -223.79001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1629798305
@@ -1127,7 +1173,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -728, y: 14}
+  m_AnchoredPosition: {x: -727.99994, y: 14}
   m_SizeDelta: {x: -1592, y: -238}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1868952295

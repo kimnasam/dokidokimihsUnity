@@ -2,39 +2,41 @@ using System.Collections;
 using UnityEngine;
 using TMPro;
 
+[System.Serializable]
+public class DialogLine
+{
+    public string name;
+    public string dialog;
+    public string animation;
+}
+
+[System.Serializable]
+public class DialogData
+{
+    public DialogLine[] lines;
+}
+
 public class DialogManager : MonoBehaviour
 {
     [Header("UI")]
-    public GameObject dialogPanel;          // textbar
-    public TextMeshProUGUI nameText;        // TextName
-    public TextMeshProUGUI dialogText;      // TextDialog
-    public GameObject dialogArrow;          // DialogArrow
+    public GameObject dialogPanel;
+    public TextMeshProUGUI nameText;
+    public TextMeshProUGUI dialogText;
+    public GameObject dialogArrow;
+    public Animator dialogArrowAnimator;
 
+    [Header("배경 애니메이션")]
+    public Animator myRoomAnimator;
     [Header("타자 효과")]
     public float typingSpeed = 0.05f;
 
-    [Header("화살표 깜빡임")]
-    public float arrowBlinkInterval = 0.4f;
+    [Header("JSON 설정")]
+    public string jsonFileName = "Dialog/scene1_dialog";
 
-    [Header("대사 데이터")]
     private int currentIndex = 0;
-
-    private string[] names = new string[]
-    {
-        "문붕이",
-        "문붕이",
-        "문붕이"
-    };
-
-    private string[] dialogs = new string[]
-    {
-        "으음... 벌써 아침인가",
-        "조금만 더 자고 싶은데...",
-        "그래도 일어나야지."
-    };
+    private DialogData dialogData;
 
     private Coroutine typingCoroutine;
-    private Coroutine arrowBlinkCoroutine;
 
     private bool isTyping = false;
     private bool isDialogActive = false;
@@ -42,6 +44,8 @@ public class DialogManager : MonoBehaviour
 
     private void Start()
     {
+        LoadDialogFromJson();
+
         if (dialogPanel != null)
         {
             dialogPanel.SetActive(false);
@@ -53,11 +57,35 @@ public class DialogManager : MonoBehaviour
         }
     }
 
+    private void LoadDialogFromJson()
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>(jsonFileName);
+
+        if (jsonFile == null)
+        {
+            Debug.LogError($"JSON 파일을 찾을 수 없음: Resources/{jsonFileName}.json");
+            return;
+        }
+
+        dialogData = JsonUtility.FromJson<DialogData>(jsonFile.text);
+
+        if (dialogData == null || dialogData.lines == null || dialogData.lines.Length == 0)
+        {
+            Debug.LogError("JSON 대사 데이터가 비어 있음");
+        }
+    }
+
     public void StartDialog()
     {
         if (dialogPanel == null || nameText == null || dialogText == null)
         {
             Debug.LogError("DialogManager UI 연결이 비어 있음");
+            return;
+        }
+
+        if (dialogData == null || dialogData.lines == null || dialogData.lines.Length == 0)
+        {
+            Debug.LogError("불러온 대사 데이터가 없음");
             return;
         }
 
@@ -76,7 +104,7 @@ public class DialogManager : MonoBehaviour
 
     private void ShowDialog()
     {
-        nameText.text = names[currentIndex];
+        nameText.text = dialogData.lines[currentIndex].name;
         canGoNext = false;
 
         if (dialogArrow != null)
@@ -84,10 +112,17 @@ public class DialogManager : MonoBehaviour
             dialogArrow.SetActive(false);
         }
 
-        if (arrowBlinkCoroutine != null)
+        // 현재 대사 줄의 animation 값이 비어있지 않으면 실행
+        if (!string.IsNullOrEmpty(dialogData.lines[currentIndex].animation))
         {
-            StopCoroutine(arrowBlinkCoroutine);
-            arrowBlinkCoroutine = null;
+            if (myRoomAnimator != null)
+            {
+                myRoomAnimator.Play(dialogData.lines[currentIndex].animation, 0, 0f);
+            }
+            else
+            {
+                Debug.LogWarning("myRoomAnimator가 연결되지 않았음");
+            }
         }
 
         if (typingCoroutine != null)
@@ -95,7 +130,7 @@ public class DialogManager : MonoBehaviour
             StopCoroutine(typingCoroutine);
         }
 
-        typingCoroutine = StartCoroutine(TypeDialog(dialogs[currentIndex]));
+        typingCoroutine = StartCoroutine(TypeDialog(dialogData.lines[currentIndex].dialog));
     }
 
     private IEnumerator TypeDialog(string fullText)
@@ -112,24 +147,28 @@ public class DialogManager : MonoBehaviour
         isTyping = false;
         canGoNext = true;
 
-        if (dialogArrow != null)
+        ShowArrowPulse();
+    }
+
+    private void ShowArrowPulse()
+    {
+        if (dialogArrow == null)
+            return;
+
+        dialogArrow.SetActive(true);
+
+        if (dialogArrowAnimator != null)
         {
-            arrowBlinkCoroutine = StartCoroutine(BlinkArrow());
+            dialogArrowAnimator.Play("DialogArrow_Pulse", 0, 0f);
         }
     }
 
-    private IEnumerator BlinkArrow()
+    private void HideArrow()
     {
-        while (canGoNext)
+        if (dialogArrow != null)
         {
-            dialogArrow.SetActive(true);
-            yield return new WaitForSeconds(arrowBlinkInterval);
-
             dialogArrow.SetActive(false);
-            yield return new WaitForSeconds(arrowBlinkInterval);
         }
-
-        dialogArrow.SetActive(false);
     }
 
     private void Update()
@@ -144,7 +183,7 @@ public class DialogManager : MonoBehaviour
             {
                 CompleteCurrentLine();
             }
-            // 출력 끝났고 화살표 깜빡이는 상태면 다음 대사
+            // 출력 끝났으면 다음 대사
             else if (canGoNext)
             {
                 NextDialog();
@@ -160,39 +199,21 @@ public class DialogManager : MonoBehaviour
             typingCoroutine = null;
         }
 
-        dialogText.text = dialogs[currentIndex];
+        dialogText.text = dialogData.lines[currentIndex].dialog;
         isTyping = false;
         canGoNext = true;
 
-        if (dialogArrow != null)
-        {
-            if (arrowBlinkCoroutine != null)
-            {
-                StopCoroutine(arrowBlinkCoroutine);
-            }
-
-            arrowBlinkCoroutine = StartCoroutine(BlinkArrow());
-        }
+        ShowArrowPulse();
     }
 
     private void NextDialog()
     {
         canGoNext = false;
-
-        if (dialogArrow != null)
-        {
-            dialogArrow.SetActive(false);
-        }
-
-        if (arrowBlinkCoroutine != null)
-        {
-            StopCoroutine(arrowBlinkCoroutine);
-            arrowBlinkCoroutine = null;
-        }
+        HideArrow();
 
         currentIndex++;
 
-        if (currentIndex >= dialogs.Length)
+        if (currentIndex >= dialogData.lines.Length)
         {
             dialogPanel.SetActive(false);
             isDialogActive = false;
