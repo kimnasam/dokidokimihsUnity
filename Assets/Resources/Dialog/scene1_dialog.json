@@ -20,6 +20,14 @@
     {
       "name": "문붕이",
       "dialog": "8시 21분!?!?!?!?!?!?!?"
+    },
+    {
+      "name": "문붕이",
+      "dialog": "지고쿠다요 지고쿠!!!",
+      "animation": "Myroom_Nomal"
+    },
+    {
+      "animation": "Myroom_Nomal"
     }
   ]
 }
