@@ -14,7 +14,7 @@
     },
     {
       "name": "문붕이",
-      "dialog": "헉ㅁ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+      "dialog": "헉ㅁ!!!!!!!!!",
       "animation": "Myroom_Shake"
     },
     {
@@ -27,7 +27,7 @@
       "animation": "Myroom_Nomal"
     },
     {
-      "animation": "Myroom_Nomal"
+      "animation": "Scenes_Switch"
     }
   ]
 }

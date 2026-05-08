@@ -25,8 +25,13 @@ public class DialogManager : MonoBehaviour
     public GameObject dialogArrow;
     public Animator dialogArrowAnimator;
 
-    [Header("배경 애니메이션")]
+    [Header("Animators")]
     public Animator myRoomAnimator;
+    public Animator scenesSwitchAnimator;
+
+    [Header("Voice")]
+    public VoiceManager voiceManager;
+
     [Header("타자 효과")]
     public float typingSpeed = 0.05f;
 
@@ -35,7 +40,6 @@ public class DialogManager : MonoBehaviour
 
     private int currentIndex = 0;
     private DialogData dialogData;
-
     private Coroutine typingCoroutine;
 
     private bool isTyping = false;
@@ -47,14 +51,10 @@ public class DialogManager : MonoBehaviour
         LoadDialogFromJson();
 
         if (dialogPanel != null)
-        {
             dialogPanel.SetActive(false);
-        }
 
         if (dialogArrow != null)
-        {
             dialogArrow.SetActive(false);
-        }
     }
 
     private void LoadDialogFromJson()
@@ -70,9 +70,7 @@ public class DialogManager : MonoBehaviour
         dialogData = JsonUtility.FromJson<DialogData>(jsonFile.text);
 
         if (dialogData == null || dialogData.lines == null || dialogData.lines.Length == 0)
-        {
             Debug.LogError("JSON 대사 데이터가 비어 있음");
-        }
     }
 
     public void StartDialog()
@@ -92,45 +90,70 @@ public class DialogManager : MonoBehaviour
         dialogPanel.SetActive(true);
         currentIndex = 0;
         isDialogActive = true;
-        canGoNext = false;
-
-        if (dialogArrow != null)
-        {
-            dialogArrow.SetActive(false);
-        }
 
         ShowDialog();
     }
 
     private void ShowDialog()
     {
-        nameText.text = dialogData.lines[currentIndex].name;
+        DialogLine line = dialogData.lines[currentIndex];
+
         canGoNext = false;
+        HideArrow();
 
-        if (dialogArrow != null)
+        PlayAnimationSignal(line.animation);
+
+        if (voiceManager != null && !string.IsNullOrEmpty(line.name))
         {
-            dialogArrow.SetActive(false);
+            voiceManager.PlayTypingVoice(line.name);
         }
 
-        // 현재 대사 줄의 animation 값이 비어있지 않으면 실행
-        if (!string.IsNullOrEmpty(dialogData.lines[currentIndex].animation))
+        if (string.IsNullOrEmpty(line.dialog))
         {
-            if (myRoomAnimator != null)
+            nameText.text = "";
+            dialogText.text = "";
+
+            if (currentIndex >= dialogData.lines.Length - 1)
             {
-                myRoomAnimator.Play(dialogData.lines[currentIndex].animation, 0, 0f);
+                dialogPanel.SetActive(false);
+                isDialogActive = false;
+                return;
             }
-            else
-            {
-                Debug.LogWarning("myRoomAnimator가 연결되지 않았음");
-            }
+
+            currentIndex++;
+            ShowDialog();
+            return;
         }
+
+        nameText.text = string.IsNullOrEmpty(line.name) ? "" : line.name;
 
         if (typingCoroutine != null)
-        {
             StopCoroutine(typingCoroutine);
+
+        typingCoroutine = StartCoroutine(TypeDialog(line.dialog));
+    }
+
+    private void PlayAnimationSignal(string animationName)
+    {
+        if (string.IsNullOrEmpty(animationName))
+            return;
+
+        // 씬 전환 애니메이션은 scenesSwitchAnimator로 보냄
+        if (animationName == "Scenes_Switch")
+        {
+            if (scenesSwitchAnimator != null)
+                scenesSwitchAnimator.Play(animationName, 0, 0f);
+            else
+                Debug.LogWarning("scenesSwitchAnimator가 연결되지 않았음");
+
+            return;
         }
 
-        typingCoroutine = StartCoroutine(TypeDialog(dialogData.lines[currentIndex].dialog));
+        // 방 흔들림/방 복귀 애니메이션은 myRoomAnimator로 보냄
+        if (myRoomAnimator != null)
+            myRoomAnimator.Play(animationName, 0, 0f);
+        else
+            Debug.LogWarning("myRoomAnimator가 연결되지 않았음");
     }
 
     private IEnumerator TypeDialog(string fullText)
@@ -138,9 +161,21 @@ public class DialogManager : MonoBehaviour
         isTyping = true;
         dialogText.text = "";
 
+        string currentSpeaker = dialogData.lines[currentIndex].name;
+
         for (int i = 0; i < fullText.Length; i++)
         {
             dialogText.text += fullText[i];
+
+            // 공백 제외하고 소리 재생
+            if (fullText[i] != ' '&& fullText[i] != '.' && fullText[i] != '!' && fullText[i] != '?')
+            {
+                if (voiceManager != null)
+                {   
+                    voiceManager.PlayTypingVoice(currentSpeaker);
+                }
+            }
+
             yield return new WaitForSeconds(typingSpeed);
         }
 
@@ -148,7 +183,7 @@ public class DialogManager : MonoBehaviour
         canGoNext = true;
 
         ShowArrowPulse();
-    }
+    }   
 
     private void ShowArrowPulse()
     {
@@ -158,17 +193,13 @@ public class DialogManager : MonoBehaviour
         dialogArrow.SetActive(true);
 
         if (dialogArrowAnimator != null)
-        {
             dialogArrowAnimator.Play("DialogArrow_Pulse", 0, 0f);
-        }
     }
 
     private void HideArrow()
     {
         if (dialogArrow != null)
-        {
             dialogArrow.SetActive(false);
-        }
     }
 
     private void Update()
@@ -178,16 +209,10 @@ public class DialogManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            // 아직 출력 중이면 전체 문장 즉시 표시
             if (isTyping)
-            {
                 CompleteCurrentLine();
-            }
-            // 출력 끝났으면 다음 대사
             else if (canGoNext)
-            {
                 NextDialog();
-            }
         }
     }
 
